@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>O‘qituvchilarni Guruhlash</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background: #222;
+        transition: background 0.5s;
+    }
+
+    #result {
+        margin-top: 100px;
+        font-size: 90px;
+        color: white;
+        text-align: center;
+        z-index: 10;
+    }
+
+    button {
+        width: 100%;
+        font-size: 50px;
+        padding: 40px;
+        border: none;
+        cursor: pointer;
+        background: black;
+        color: white;
+    }
+
+    button:active {
+        background: #444;
+    }
+
+    /* Confetti canvas */
+    canvas {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="result">BOSHLASH</div>
+
+<canvas id="confetti"></canvas>
+
+<button onclick="pickGroup()">GURUHNI TANLASH</button>
+
+<!-- Ovoz -->
+<audio id="sound">
+    <source src="vine-boom.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let teachers = Array.from({length: 50}, (_, i) => i + 1);
+teachers.sort(() => Math.random() - 0.5);
+
+const groups = [
+    {name: "QIZIL", color: "#e53935", max: 13, count: 0},
+    {name: "KO‘K", color: "#1e88e5", max: 13, count: 0},
+    {name: "YASHIL", color: "#43a047", max: 12, count: 0},
+    {name: "SARIQ", color: "#fbc02d", max: 12, count: 0}
+];
+
+let index = 0;
+
+/* ===== Confetti ===== */
+const canvas = document.getElementById("confetti");
+const ctx = canvas.getContext("2d");
+resize();
+
+window.addEventListener("resize", resize);
+
+let particles = [];
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+function blast(color) {
+    particles = [];
+    for (let i = 0; i < 120; i++) {
+        particles.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: (Math.random() - 0.5) * 18,
+            vy: (Math.random() - 0.7) * 18,
+            size: Math.random() * 6 + 4,
+            life: 100,
+            color
+        });
+    }
+    animate();
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.4;
+        p.life--;
+
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    particles = particles.filter(p => p.life > 0);
+    if (particles.length) requestAnimationFrame(animate);
+}
+
+function pickGroup() {
+    if (index >= teachers.length) {
+        document.getElementById("result").innerHTML = "✅ HAMMASI TAQSIMLANDI";
+        document.body.style.background = "black";
+        return;
+    }
+
+    let available = groups.filter(g => g.count < g.max);
+    let group = available[Math.floor(Math.random() * available.length)];
+
+    group.count++;
+    index++;
+
+    document.getElementById("result").innerHTML = group.name;
+    document.body.style.background = group.color;
+
+    blast(group.color);
+
+    let sound = document.getElementById("sound");
+    sound.currentTime = 0;
+    sound.play();
+}
+</script>
+
+</body>
+</html>
